@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#090a0c">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>AVLG Metrics 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+window.DSP_UI = window.DSP_UI || {
+  injectTheme: function() {},
+  syncThemeColor: function() {
+    var theme = getComputedStyle(document.documentElement).getPropertyValue("--black").trim() || "#090a0c";
+    var meta = document.querySelector("meta[name=theme-color]");
+    if (meta) meta.setAttribute("content", theme);
+  },
+  scrollReveal: function(selector) {
+    var sections = document.querySelectorAll(selector || ".section");
+    if (!("IntersectionObserver" in window)) {
+      sections.forEach(function(section) { section.classList.add("visible"); });
+      return;
+    }
+    var obs = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("visible");
+          obs.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.06 });
+    sections.forEach(function(section) { obs.observe(section); });
+  }
+};
+</script>
+<style>
+:root {
+  /* Clean dark AVLG base theme */
+  --black: #090a0c;
+  --dark: #0d1014;
+  --card: #141820;
+  --border: rgba(255,255,255,0.08);
+
+  --white: #f4f6f8;
+  --muted: #8f98a3;
+
+  --gold: #3ddc84;
+  --gold-bright: #8df2b6;
+  --gold-dim: #22a863;
+  --gold-muted: #3f8f64;
+  --gold-rgb: 61,220,132;
+  --gold-bg: rgba(61,220,132,0.06);
+  --gold-bg-strong: rgba(61,220,132,0.11);
+  --gold-bd: rgba(61,220,132,0.22);
+  --gold-bd-strong: rgba(61,220,132,0.42);
+
+  --accent: #3ddc84;
+  --accent-rgb: 61,220,132;
+  --accent-bg: rgba(61,220,132,0.06);
+  --accent-bd: rgba(61,220,132,0.22);
+
+  /* Quality metric accents */
+  --cdf: #f08a4b; --cdf-bg: rgba(240,138,75,0.10); --cdf-bd: rgba(240,138,75,0.26); --cdf-tx: #f7bd8d;
+  --dcr: #5b9dff; --dcr-bg: rgba(91,157,255,0.10); --dcr-bd: rgba(91,157,255,0.26); --dcr-tx: #9ec5ff;
+  --dsb: #3ddc84; --dsb-bg: rgba(61,220,132,0.08); --dsb-bd: rgba(61,220,132,0.24); --dsb-tx: #8df2b6;
+  --pod: #b784ff; --pod-bg: rgba(183,132,255,0.10); --pod-bd: rgba(183,132,255,0.26); --pod-tx: #d5bdff;
+  --exm: #38c7c0; --exm-bg: rgba(56,199,192,0.09); --exm-bd: rgba(56,199,192,0.25); --exm-tx: #8ee8e3;
+
+  /* Safety metric accents */
+  --seatbelt: #f26d6d; --seatbelt-bg: rgba(242,109,109,0.10); --seatbelt-bd: rgba(242,109,109,0.26); --seatbelt-tx: #f3a8a8;
+  --speed: #f08a4b; --speed-bg: rgba(240,138,75,0.10); --speed-bd: rgba(240,138,75,0.26); --speed-tx: #f7bd8d;
+  --sign: #e6b84a; --sign-bg: rgba(230,184,74,0.10); --sign-bd: rgba(230,184,74,0.26); --sign-tx: #f0d98f;
+  --distract: #b784ff; --distract-bg: rgba(183,132,255,0.10); --distract-bd: rgba(183,132,255,0.26); --distract-tx: #d5bdff;
+  --follow: #5b9dff; --follow-bg: rgba(91,157,255,0.10); --follow-bd: rgba(91,157,255,0.26); --follow-tx: #9ec5ff;
+
+  /* Page alert accents */
+  --danger-tx: #f3a8a8;
+  --warn-bg: rgba(240,138,75,0.10); --warn-bd: rgba(240,138,75,0.26); --warn-tx: #f7bd8d;
+  --info-bg: var(--accent-bg); --info-bd: var(--accent-bd); --info-tx: var(--accent);
+  --success-tx: #8df2b6;
+}*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; scroll-padding-top: 80px; }
+body {
+  background: var(--black);
+  color: var(--white);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── HERO ── */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  justify-content: center; align-items: center;
+  text-align: center;
+  padding: 80px 24px 60px;
+  overflow: hidden;
+  background: var(--dark);
+}
+.hero::before {
+  content: ''; position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 80% 55% at 50% 0%, rgba(var(--accent-rgb),0.13) 0%, transparent 68%),
+    repeating-linear-gradient(0deg,  transparent, transparent 39px, rgba(255,255,255,0.018) 40px),
+    repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,0.018) 40px);
+  pointer-events: none;
+}
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10.5px; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--gold); border: 1px solid var(--gold-bd); background: var(--gold-bg);
+  padding: 7px 18px; border-radius: 2px; margin-bottom: 36px;
+  position: relative; z-index: 1;
+  animation: fadeUp 0.65s ease both;
+}
+.hero-badge svg { width:11px; height:11px; stroke:var(--gold); fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.hero h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(68px, 14vw, 164px);
+  line-height: 0.88; letter-spacing: 0.025em;
+  position: relative; z-index: 1;
+  animation: fadeUp 0.65s 0.1s ease both;
+}
+.hero h1 span { display:block; color:var(--gold); }
+.hero-sub {
+  margin-top: 32px; font-size: 16px; color: var(--muted);
+  max-width: 520px; line-height: 1.65;
+  position: relative; z-index: 1;
+  animation: fadeUp 0.65s 0.2s ease both;
+}
+.hero-sub strong { color:var(--white); font-weight:600; }
+.scroll-hint {
+  position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  color: var(--muted); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+  font-family: 'DM Mono', monospace;
+  animation: fadeUp 0.65s 0.5s ease both;
+}
+.scroll-hint::after {
+  content: ''; width: 1px; height: 44px;
+  background: linear-gradient(to bottom, var(--muted), transparent);
+  animation: pulseLine 2.2s ease-in-out infinite;
+}
+
+/* ── NAV TABS ── */
+.page-nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(10,10,10,0.88);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+}
+.page-nav-inner {
+  max-width: 880px; margin: 0 auto; padding: 0 28px;
+  display: flex; align-items: center; height: 52px; gap: 6px;
+}
+.nav-brand {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px; letter-spacing: 0.06em; margin-right: auto;
+  display: flex; align-items: center; gap: 8px;
+}
+.nav-brand span { color: var(--gold); }
+.nav-tab {
+  font-family: 'DM Mono', monospace;
+  font-size: 10.5px; letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--muted); background: none; border: 1px solid transparent;
+  padding: 6px 16px; border-radius: 2px; cursor: pointer;
+  transition: all 0.2s;
+}
+.nav-tab:hover { color: var(--white); background: rgba(255,255,255,0.04); }
+.nav-tab.active { color: var(--gold); border-color: var(--gold-bd); background: var(--gold-bg); }
+
+/* ── JUMP NAVIGATION (SUB-NAV) ── */
+.jump-nav {
+  display: flex; flex-wrap: wrap; gap: 10px;
+  margin-top: 40px; margin-bottom: -40px;
+}
+.jump-btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 8px 16px; border-radius: 4px;
+  text-decoration: none; font-weight: 500;
+  transition: all 0.2s ease;
+}
+.jump-btn:hover { transform: translateY(-2px); }
+
+/* Quality Jump Buttons */
+.jump-btn.btn-cdf { background: var(--cdf-bg); border: 1px solid var(--cdf-bd); color: var(--cdf-tx); }
+.jump-btn.btn-cdf:hover { background: var(--cdf); color: #000; border-color: var(--cdf); }
+
+.jump-btn.btn-dcr { background: var(--dcr-bg); border: 1px solid var(--dcr-bd); color: var(--dcr-tx); }
+.jump-btn.btn-dcr:hover { background: var(--dcr); color: #000; border-color: var(--dcr); }
+
+.jump-btn.btn-dsb { background: var(--dsb-bg); border: 1px solid var(--dsb-bd); color: var(--dsb-tx); }
+.jump-btn.btn-dsb:hover { background: var(--dsb); color: #000; border-color: var(--dsb); }
+
+.jump-btn.btn-exm { background: var(--exm-bg); border: 1px solid var(--exm-bd); color: var(--exm-tx); }
+.jump-btn.btn-exm:hover { background: var(--exm); color: #000; border-color: var(--exm); }
+
+.jump-btn.btn-pod { background: var(--pod-bg); border: 1px solid var(--pod-bd); color: var(--pod-tx); }
+.jump-btn.btn-pod:hover { background: var(--pod); color: #000; border-color: var(--pod); }
+
+/* Safety Jump Buttons */
+.jump-btn.btn-seatbelt { background: var(--seatbelt-bg); border: 1px solid var(--seatbelt-bd); color: var(--seatbelt-tx); }
+.jump-btn.btn-seatbelt:hover { background: var(--seatbelt); color: #000; border-color: var(--seatbelt); }
+
+.jump-btn.btn-speed { background: var(--speed-bg); border: 1px solid var(--speed-bd); color: var(--speed-tx); }
+.jump-btn.btn-speed:hover { background: var(--speed); color: #000; border-color: var(--speed); }
+
+.jump-btn.btn-sign { background: var(--sign-bg); border: 1px solid var(--sign-bd); color: var(--sign-tx); }
+.jump-btn.btn-sign:hover { background: var(--sign); color: #000; border-color: var(--sign); }
+
+.jump-btn.btn-distract { background: var(--distract-bg); border: 1px solid var(--distract-bd); color: var(--distract-tx); }
+.jump-btn.btn-distract:hover { background: var(--distract); color: #000; border-color: var(--distract); }
+
+.jump-btn.btn-follow { background: var(--follow-bg); border: 1px solid var(--follow-bd); color: var(--follow-tx); }
+.jump-btn.btn-follow:hover { background: var(--follow); color: #000; border-color: var(--follow); }
+
+
+/* ── WRAPPER ── */
+.wrapper { max-width: 880px; margin: 0 auto; padding: 0 28px 120px; }
+
+/* ── SECTIONS ── */
+.section {
+  margin-top: 88px;
+  opacity: 0; transform: translateY(22px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.section.visible { opacity:1; transform:translateY(0); }
+.section-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase;
+  margin-bottom: 13px;
+  display: flex; align-items: center; gap: 14px;
+}
+.section-label::after { content:''; flex:1; height:1px; background:var(--border); }
+.section-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(38px, 7vw, 66px);
+  line-height: 1; margin-bottom: 26px; letter-spacing: 0.02em;
+}
+
+/* ── CARDS ── */
+.card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 5px; padding: 26px 28px;
+}
+.card + .card { margin-top: 10px; }
+.card-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 19px; letter-spacing: 0.07em;
+  margin-bottom: 18px; display: flex; align-items: center; gap: 10px;
+}
+.ci {
+  width: 26px; height: 26px; flex-shrink: 0;
+  border-radius: 4px; display: flex; align-items: center; justify-content: center;
+}
+.ci svg { width:14px; height:14px; fill:none; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
+
+/* ── POLICY LIST ── */
+.policy-list { list-style:none; display:flex; flex-direction:column; gap:12px; }
+.policy-list li {
+  display: flex; gap: 13px; align-items: flex-start;
+  font-size: 14.5px; color: #c8c8c8; line-height: 1.68;
+}
+.policy-list li .blt { width:15px; height:15px; margin-top:5px; flex-shrink:0; }
+.policy-list li .blt svg { width:15px; height:15px; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.policy-list li .lt { display:block; flex:1; min-width:0; }
+.policy-list li .lt strong { color:var(--white); font-weight:600; }
+
+/* ── TWO COL GRID ── */
+.two-col { display:grid; grid-template-columns:1fr 1fr; gap:13px; }
+@media(max-width:560px){ .two-col{ grid-template-columns:1fr; } }
+
+/* ── ALERTS ── */
+.alert {
+  border-radius: 4px; padding: 14px 17px; font-size: 14px;
+  display: flex; gap: 12px; align-items: flex-start; line-height: 1.62;
+}
+.alert + .alert { margin-top: 10px; }
+.alert .ai { width:18px; height:18px; margin-top:1px; flex-shrink:0; }
+.alert .ai svg { width:18px; height:18px; fill:none; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
+.alert strong { font-weight:600; }
+.alert.info    { background:var(--info-bg);    border:1px solid var(--info-bd);    color:var(--info-tx);    }
+.alert.info    .ai svg { stroke:var(--info-tx); }
+
+/* ── DEFINITION CARD ── */
+.def-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-left: 4px solid; border-radius: 5px;
+  padding: 22px 28px; margin-bottom: 13px;
+}
+.def-card p { font-size: 14.5px; color: #c8c8c8; line-height: 1.68; }
+.def-card p strong { color: var(--white); font-weight: 600; }
+
+/* ── OVERVIEW TEXT ── */
+.overview-text { font-size: 14.5px; color: #c8c8c8; line-height: 1.68; }
+
+/* ── METRIC COL CARDS ── */
+.metric-col {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 5px; overflow: hidden;
+}
+.metric-col-head {
+  padding: 13px 18px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 17px; letter-spacing: 0.07em;
+  display: flex; align-items: center; gap: 9px;
+  border-bottom: 1px solid var(--border);
+}
+.metric-col-head svg { width:15px; height:15px; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
+.metric-col ul { list-style:none; padding:14px 18px 16px; display:flex; flex-direction:column; gap:10px; }
+.metric-col ul li { display:flex; gap:10px; align-items:flex-start; font-size:14px; color:#c8c8c8; line-height:1.55; }
+.metric-col ul li::before { content:''; width:5px; height:5px; border-radius:50%; flex-shrink:0; margin-top:8px; }
+.metric-col ul li strong { color:var(--white); font-weight:600; }
+
+/* ── NUMBERED LIST (Keys to Success) ── */
+.klist { list-style:none; counter-reset:k; padding:0; }
+.klist li {
+  counter-increment:k; display:flex; gap:14px; align-items:flex-start;
+  padding:14px 0; font-size:14px; color:#c8c8c8; line-height:1.65;
+  border-bottom:1px solid rgba(255,255,255,0.04);
+}
+.klist li:last-child { border-bottom:none; }
+.klist li::before {
+  content:counter(k); flex-shrink:0;
+  width:26px; height:26px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:12px; font-weight:700; color:#fff; margin-top:1px;
+  font-family:'DM Mono',monospace;
+}
+.klist li strong { color:var(--white); font-weight:600; }
+
+/* ── EXEMPTION STACK (mobile-friendly replacement for wide table) ── */
+.exemption-stack { display:flex; flex-direction:column; gap:10px; margin-bottom:13px; }
+.ex-card {
+  background:var(--card); border:1px solid var(--border);
+  border-radius:5px; overflow:hidden;
+}
+.ex-card-head {
+  padding:13px 20px;
+  font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:0.06em;
+  color:var(--dcr-tx);
+  background:var(--dcr-bg); border-bottom:1px solid var(--dcr-bd);
+}
+.ex-card-body { padding:16px 20px; display:flex; flex-direction:column; gap:14px; }
+.ex-field-label {
+  font-family:'DM Mono',monospace; font-size:9.5px;
+  letter-spacing:0.2em; text-transform:uppercase;
+  color:var(--muted); margin-bottom:5px;
+}
+.ex-field-val { font-size:14px; color:#c8c8c8; line-height:1.65; }
+.ex-field-val strong { color:var(--white); font-weight:600; }
+
+/* ── TABLE ── */
+.tblwrap {
+  overflow-x:auto; border-radius:5px;
+  border:1px solid var(--border); background:var(--card);
+  margin-bottom:13px;
+}
+.etbl { width:100%; border-collapse:collapse; font-size:14px; }
+.etbl thead th {
+  text-align:left; padding:12px 16px;
+  font-family:'DM Mono',monospace; font-size:9.5px;
+  letter-spacing:0.18em; text-transform:uppercase; color:rgba(255,255,255,0.8);
+  white-space:nowrap;
+}
+.etbl td {
+  padding:14px 16px; vertical-align:top; color:#c8c8c8; line-height:1.6;
+  border-top:1px solid rgba(255,255,255,0.04);
+}
+.etbl tr:hover td { background:rgba(255,255,255,0.02); }
+.etbl .tcell { font-weight:600; color:var(--white); white-space:nowrap; min-width:120px; }
+.etbl .ccell { min-width:170px; }
+.etbl .ccell ul { list-style:disc; padding-left:1rem; margin:0; }
+.etbl .ccell ul li { padding:1px 0; }
+.etbl td strong { color:var(--white); font-weight:600; }
+
+/* ── EXEMPTION ITEMS ── */
+.exitem { padding:18px 0; border-bottom:1px solid rgba(255,255,255,0.04); }
+.exitem:last-child { border-bottom:none; }
+.exitem h4 {
+  font-family:'Bebas Neue',sans-serif; font-size:17px; letter-spacing:0.05em;
+  margin-bottom:8px; display:flex; align-items:center; gap:10px;
+}
+.exnum {
+  width:26px; height:26px; border-radius:50%; color:#fff;
+  font-family:'DM Mono',monospace; font-size:11px;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0; font-weight:700;
+}
+.exitem p { font-size:14px; color:#c8c8c8; line-height:1.65; padding-left:36px; }
+
+/* ── BEST PRACTICES BOX ── */
+.bpbox {
+  border-radius:5px; padding:22px 24px;
+  margin-top:13px;
+}
+.bpbox h3 {
+  font-family:'Bebas Neue',sans-serif; font-size:17px; letter-spacing:0.06em;
+  margin-bottom:14px; display:flex; align-items:center; gap:10px;
+}
+.bpbox h3 svg { width:15px; height:15px; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.bpbox ul { list-style:none; }
+.bpbox ul li {
+  font-size:14px; color:#c8c8c8; padding:7px 0 7px 28px;
+  position:relative; line-height:1.6;
+}
+.bpbox ul li::before {
+  content:''; position:absolute; left:4px; top:12px;
+  width:8px; height:8px; border:2px solid; border-radius:2px;
+}
+
+/* ── BANNER ── */
+.section-banner {
+  padding: 28px 28px; border-radius: 5px;
+  position: relative; overflow: hidden;
+  margin-bottom: 26px;
+}
+.section-banner h2 {
+  font-family:'Bebas Neue',sans-serif;
+  font-size: clamp(28px,5vw,42px); letter-spacing:0.03em; line-height:1; margin-bottom:8px;
+}
+.section-banner p { font-size:14.5px; opacity:0.85; line-height:1.6; }
+
+/* ── PAGE TOGGLE ── */
+.page { display:none; }
+.page.active { display:block; }
+
+/* ── FOOTER ── */
+.footer {
+  border-top:1px solid var(--border); padding:52px 28px;
+  text-align:center; color:var(--muted); font-size:13px;
+}
+.footer-logo { font-family:'Bebas Neue',sans-serif; font-size:30px; letter-spacing:0.06em; color:var(--white); margin-bottom:8px; }
+.footer-logo span { color:var(--gold); }
+
+hr.div { border:none; border-top:1px solid var(--border); margin:22px 0; }
+
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(18px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+@keyframes pulseLine {
+  0%,100% { opacity:0.35; }
+  50%      { opacity:1; }
+}
+
+@media print {
+  .page-nav { display:none; }
+  .jump-nav { display:none; }
+  .section { opacity:1; transform:none; }
+  body { background:#111; }
+}
+</style>
+</head>
+<body>
+
+<nav class="page-nav">
+  <div class="page-nav-inner">
+    <div class="nav-brand">AVLG <span>Metrics</span></div>
+    <button class="nav-tab active" id="btn-quality" onclick="showPage('quality')">Quality</button>
+    <button class="nav-tab" id="btn-safety" onclick="showPage('safety')">Safety</button>
+  </div>
+</nav>
+
+<div class="page active" id="page-quality">
+<div class="wrapper">
+
+<div class="jump-nav">
+  <a href="#cdf" class="jump-btn btn-cdf">CDF</a>
+  <a href="#dcr" class="jump-btn btn-dcr">DCR</a>
+  <a href="#dsb" class="jump-btn btn-dsb">DSB</a>
+  <a href="#dsb-exemptions" class="jump-btn btn-exm">Exemptions</a>
+  <a href="#pod" class="jump-btn btn-pod">POD</a>
+</div>
+
+<div class="section" id="cdf">
+  <div class="section-label" style="color:var(--cdf)">Quality Metric</div>
+  <div class="section-title">Customer Delivery Feedback</div>
+
+  <div class="def-card" style="border-left-color:var(--cdf)">
+    <p><strong>CDF</strong> tracks customer-reported feedback on their delivery experience. It focuses on controllable behaviors that affect satisfaction and trust, such as following instructions, securing packages, and maintaining professionalism.</p>
+  </div>
+
+  <div class="card" style="margin-bottom:13px;">
+    <p class="overview-text">When customers receive their package, they can rate the delivery as "Very Good" or "Not Very Good." If "Not Very Good" is selected, they choose a specific reason. These DA-controllable reasons become the basis of CDF. Examples include wrong address, ignored delivery notes, unprofessional behavior, or unsafe package placement. The goal is to identify coachable behaviors that impact customer experience.</p>
+  </div>
+
+  <div class="two-col">
+    <div class="metric-col">
+      <div class="metric-col-head" style="background:var(--cdf-bg); color:var(--cdf-tx); border-bottom-color:var(--cdf-bd)">
+        <svg viewBox="0 0 24 24" style="stroke:var(--cdf-tx)"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Common Feedback Causes
+      </div>
+      <ul>
+        <li style="--dot:var(--cdf)"><span>Package left in unsafe, visible, or weather-exposed area</span></li>
+        <li><span>Delivered to wrong address or wrong unit</span></li>
+        <li><span>Customer instructions not followed or ignored</span></li>
+        <li><span>Driver appeared unprofessional (attire, behavior, or loud music)</span></li>
+        <li><span>Package mishandled (thrown, dropped, or placed carelessly)</span></li>
+        <li><span>Photo did not match the drop location</span></li>
+      </ul>
+    </div>
+    <div class="metric-col">
+      <div class="metric-col-head" style="background:var(--cdf-bg); color:var(--cdf-tx); border-bottom-color:var(--cdf-bd)">
+        <svg viewBox="0 0 24 24" style="stroke:var(--cdf-tx)"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Driver Success Tips
+      </div>
+      <ul>
+        <li><span>Always double-check name, address, and unit before scanning</span></li>
+        <li><span>Follow customer delivery notes exactly. If unsafe or unclear, call the customer or Driver Support</span></li>
+        <li><span>Choose secure, concealed spots protected from view and weather</span></li>
+        <li><span>Ensure your uniform, music, and conduct reflect professionalism</span></li>
+        <li><span>Take a clear POD photo showing placement and surroundings</span></li>
+        <li><span>Respect property. Avoid walking on lawns or landscaping</span></li>
+        <li><span>If unsure, contact Driver Support. Never guess a location</span></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="section" id="dcr">
+  <div class="section-label" style="color:var(--dcr)">Quality Metric</div>
+  <div class="section-title">Delivery Completion Rate</div>
+
+  <div class="def-card" style="border-left-color:var(--dcr)">
+    <p><strong>DCR</strong> measures the rate at which packages are successfully delivered on the first attempt versus returned to station (RTS). It tracks driver behaviors that contribute to failed delivery attempts and helps identify coaching opportunities to improve first-attempt delivery success.</p>
+  </div>
+
+  <div class="card" style="margin-bottom:13px;">
+    <div class="card-title" style="color:var(--dcr-tx)">
+      <span class="ci" style="background:var(--dcr-bg); border:1px solid var(--dcr-bd)"><svg viewBox="0 0 24 24" style="stroke:var(--dcr-tx)"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+      Package-Level Proactive DCR Exemptions
+    </div>
+    <p class="overview-text">Drivers are eligible for package-level DCR exemptions for RTS packages when the corresponding exemption requirements are met.</p>
+  </div>
+
+  <div class="exemption-stack">
+
+    <div class="ex-card">
+      <div class="ex-card-head">Contact Compliance</div>
+      <div class="ex-card-body">
+        <div class="ex-field">
+          <div class="ex-field-label">Applicable RTS Codes</div>
+          <div class="ex-field-val">Unable to Access (UTA) · Unable to Locate (UTL) · No Safe Location (NSL) · Unsafe Due to Dog (UDD) · Customer Unavailable · Bad Weather</div>
+        </div>
+        <div class="ex-field">
+          <div class="ex-field-label">Requirements</div>
+          <div class="ex-field-val">DA must complete <strong>ONE</strong> of the following:<br><br><strong>Option 1: Contact Customer.</strong> Call customer and allow phone to ring for at least 12 seconds (2 ring cycles). If customer answers, ask for help completing delivery. If no answer, send a text message.<br><br><strong>Option 2: Contact Driver Support.</strong> Call Driver Support if customer number is disconnected, unlisted, or if DA does not feel safe contacting customer. Between 8 PM and 8 AM local time, DA must contact Driver Support only.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ex-card">
+      <div class="ex-card-head">Business Closed</div>
+      <div class="ex-card-body">
+        <div class="ex-field">
+          <div class="ex-field-label">Applicable RTS Codes</div>
+          <div class="ex-field-val">Business Closed</div>
+        </div>
+        <div class="ex-field">
+          <div class="ex-field-label">Requirements</div>
+          <div class="ex-field-val">Automatic exemption when <strong>ONE</strong> of the following is met: package was routed outside of known business hours; no known business hours associated with the location; or business was unexpectedly closed (driver arrived during business hours and remained within 50m for 30+ seconds).</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ex-card">
+      <div class="ex-card-head">Reprocessed at Station</div>
+      <div class="ex-card-body">
+        <div class="ex-field">
+          <div class="ex-field-label">Applicable RTS Codes</div>
+          <div class="ex-field-val">Out of Delivery Time (OODT) · No RTS Code Selected · Object Missing</div>
+        </div>
+        <div class="ex-field">
+          <div class="ex-field-label">Requirements</div>
+          <div class="ex-field-val">Automatic exemption when station reroutes packages while driver is on route. Valid when we confirm the driver is not in possession of the package.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ex-card">
+      <div class="ex-card-head">Object Missing</div>
+      <div class="ex-card-body">
+        <div class="ex-field">
+          <div class="ex-field-label">Applicable RTS Codes</div>
+          <div class="ex-field-val">Object Missing</div>
+        </div>
+        <div class="ex-field">
+          <div class="ex-field-label">Requirements</div>
+          <div class="ex-field-val">Automatic exemption when we validate that 1) package was marked "Object Missing" by DA, and 2) later delivered by another DA without returning to station.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ex-card">
+      <div class="ex-card-head">Amazon Locker</div>
+      <div class="ex-card-body">
+        <div class="ex-field">
+          <div class="ex-field-label">Applicable RTS Codes</div>
+          <div class="ex-field-val">Locker Space Insufficient · No Locker Available</div>
+        </div>
+        <div class="ex-field">
+          <div class="ex-field-label">Requirements</div>
+          <div class="ex-field-val">Automatic exemption when DA encounters no space in Amazon locker.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ex-card">
+      <div class="ex-card-head">One Time Password (OTP)</div>
+      <div class="ex-card-body">
+        <div class="ex-field">
+          <div class="ex-field-label">Applicable RTS Codes</div>
+          <div class="ex-field-val">OTP Not Available</div>
+        </div>
+        <div class="ex-field">
+          <div class="ex-field-label">Requirements</div>
+          <div class="ex-field-val">Automatic exemption when customer is unable to provide correct OTP.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ex-card">
+      <div class="ex-card-head">Outside Driver Control</div>
+      <div class="ex-card-body">
+        <div class="ex-field">
+          <div class="ex-field-label">Applicable RTS Codes</div>
+          <div class="ex-field-val">Damaged · Rescheduled by Customer · No Items Delivered</div>
+        </div>
+        <div class="ex-field">
+          <div class="ex-field-label">Requirements</div>
+          <div class="ex-field-val">Automatic exemptions for package issues beyond DA control.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="card">
+    <div class="card-title" style="color:var(--dcr-tx)">
+      <span class="ci" style="background:var(--dcr-bg); border:1px solid var(--dcr-bd)"><svg viewBox="0 0 24 24" style="stroke:var(--dcr-tx)"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg></span>
+      Keys to Success
+    </div>
+    <ol class="klist" style="--c:var(--dcr)">
+      <li><span>Rely on your Amazon delivery app when attempting to access apartments or multi-unit buildings. Access codes will be provided in the app. Make sure to attempt all access codes given to you.</span></li>
+      <li><span>Contact the customer or Driver Support if facing difficulties delivering. A valid contact enables a proactive exemption for six DCR RTS codes: UTL, UTA, NSL, UDD, Customer Unavailable, and Bad Weather.</span></li>
+      <li><span>Find secure places to deliver packages that are not visible from the street, have little foot traffic, and are protected from weather. If you cannot find a safe location, leave a "we missed you" card near the door.</span></li>
+      <li><span>Trust your delivery route. It may seem circular, but it is built to minimize U-turns, left turns, and other inefficient maneuvers.</span></li>
+      <li><span>Do not skip stops on the route. Skipping a stop increases the chance that when you return, the business will be closed.</span></li>
+      <li><span>Follow standards to minimize missing packages. Ensure you physically have all packages when leaving the station, do not condense containers or combine packages into separate bags, and scan each package if rescuing to validate a virtual/physical match.</span></li>
+      <li><span>Download offline maps on your delivery device for your area before starting your route.</span></li>
+      <li><span>Damaged packages should not be delivered. If the QR code cannot be scanned to RTS, read the tracking number and type it in.</span></li>
+      <li><span>Take a clear photo of delivery (POD) for all applicable deliveries, including surroundings, to help the customer locate the package.</span></li>
+    </ol>
+  </div>
+</div>
+
+<div class="section" id="dsb">
+  <div class="section-label" style="color:var(--dsb)">Quality Metric</div>
+  <div class="section-title">Delivery Success Behaviors</div>
+
+  <div class="def-card" style="border-left-color:var(--dsb)">
+    <p><strong>DSB</strong> measures instances where customers reported "Delivered Not Received" (DNR) and the issue was linked to a DA-controllable behavior. It ensures packages are safely and securely delivered, reducing the chance of DNR concessions.</p>
+  </div>
+
+  <div class="card" style="margin-bottom:13px;">
+    <p class="overview-text">DSB monitors the most common controllable delivery errors that cause customers to report missing packages. It focuses on five key behaviors: Simultaneous Deliveries, Delivered more than 50m from Geopin, Incorrect Scan Usage (Attended or Unattended), and No Photo on Delivery. By preventing these, drivers help protect customer trust and avoid avoidable defects.</p>
+  </div>
+
+  <div class="two-col" style="margin-bottom:13px;">
+    <div class="metric-col">
+      <div class="metric-col-head" style="background:var(--dsb-bg); color:var(--dsb-tx); border-bottom-color:var(--dsb-bd)">
+        <svg viewBox="0 0 24 24" style="stroke:var(--dsb-tx)"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Common DSB Causes
+      </div>
+      <ul>
+        <li><span>Package delivered more than 50 meters from the Geopin location</span></li>
+        <li><span>Incorrect scan type used (e.g., Delivered to Customer vs Unattended)</span></li>
+        <li><span>No POD taken when required</span></li>
+        <li><span>Multiple packages delivered simultaneously to different addresses</span></li>
+        <li><span>Delivered to a public or highly visible area instead of a secure spot</span></li>
+      </ul>
+    </div>
+    <div class="metric-col">
+      <div class="metric-col-head" style="background:var(--dsb-bg); color:var(--dsb-tx); border-bottom-color:var(--dsb-bd)">
+        <svg viewBox="0 0 24 24" style="stroke:var(--dsb-tx)"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Driver Success Tips
+      </div>
+      <ul>
+        <li><span>Verify address, unit number, and Geopin before delivery</span></li>
+        <li><span>Deliver within 50m of the Geopin in a secure location</span></li>
+        <li><span>Always take a POD photo when prompted. Retakes are fine</span></li>
+        <li><span>Use correct scan codes that accurately reflect the delivery type</span></li>
+        <li><span>Never place packages in mailboxes (federal violation)</span></li>
+        <li><span>Follow customer instructions if safe to do so; otherwise call Driver Support</span></li>
+        <li><span>Check labels carefully in group stops to avoid mixing addresses</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title" style="color:var(--dsb-tx)">
+      <span class="ci" style="background:var(--dsb-bg); border:1px solid var(--dsb-bd)"><svg viewBox="0 0 24 24" style="stroke:var(--dsb-tx)"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg></span>
+      Keys to Success
+    </div>
+    <ol class="klist" style="--c:var(--dsb)">
+      <li><span>Make sure you are at the correct address. Compare the name and address displayed in your app to both the package label AND the physical address on the building. Always check for the Geopin.</span></li>
+      <li><span>Check the labels in a group stop. Do not assume that multiple packages in a stop are bound for the same address.</span></li>
+      <li><span>Knock on the door or ring the bell between 8am and 8pm. Customers like to know their package has arrived and delivering directly helps prevent porch theft.</span></li>
+      <li><span>When delivering to the customer directly, verify the name. If someone other than the customer accepts, ask for their first and last name, enter it, and get a signature.</span></li>
+      <li><span>Delivering directly to the customer is the best option. When that is not available, deliver to the front door in a location protected from weather and hidden from view.</span></li>
+      <li><span>Follow the customer's delivery instructions when safe and secure. If instructions ask for an unsecure location, call the customer to confirm.</span></li>
+      <li><span>Never deliver to a customer's mailbox. Mailboxes are for the Postal Service only  it is a federal offense.</span></li>
+      <li><span>Scan delivered packages with the right reason codes. Customers receive notification of the scan type.</span></li>
+      <li><span>Take Photo of Delivery (POD) for all applicable deliveries with a clear view of the package and surroundings.</span></li>
+      <li><span>Mark the package with the appropriate RTS reason code if unable to complete delivery. RTS packages will not count as a DSB defect.</span></li>
+    </ol>
+  </div>
+</div>
+
+<div class="section" id="dsb-exemptions">
+  <div class="section-label" style="color:var(--exm)">Exemptions</div>
+  <div class="section-title">DSB Exemptions</div>
+
+  <div class="def-card" style="border-left-color:var(--exm)">
+    <p>Certain scenarios qualify for <strong>automatic DSB exemptions</strong>, meaning those deliveries will not count as defects against a driver's DSB score. Understanding these exemptions helps drivers follow the right steps to protect their metrics.</p>
+  </div>
+
+  <div class="card">
+    <div class="exitem">
+      <h4><span class="exnum" style="background:var(--exm)">1</span> Scanned, Not Delivered, Not Returned</h4>
+      <p>Three scenarios where lost packages are exempted: packages marked "Package is Missing" in the app, self-service return scans within the station geofence, and packages with status updates made by Driver Support.</p>
+    </div>
+    <div class="exitem">
+      <h4><span class="exnum" style="background:var(--exm)">2</span> Inaccurate Scan Usage with Customer Contact</h4>
+      <p>DSB defects for Inaccurate Scan Usage (Unattended Delivery) or Delivered more than 50m from Geopin will be proactively exempted when the driver contacted the customer to align on an alternate location.</p>
+    </div>
+    <div class="exitem">
+      <h4><span class="exnum" style="background:var(--exm)">3</span> OTP Deliveries</h4>
+      <p>Any package associated with a one-time password (OTP) delivery where the driver input the correct OTP is exempted from impacting DSB.</p>
+    </div>
+    <div class="exitem">
+      <h4><span class="exnum" style="background:var(--exm)">4</span> Attended or Simultaneous Deliveries to Business Locations with Valid Photo</h4>
+      <p>Applies when: 1) The DA completed an attended delivery, 2) The DA took a valid POSD or POAD, and 3) The DA has no other DSB defects for that Tracking ID.</p>
+    </div>
+    <div class="exitem">
+      <h4><span class="exnum" style="background:var(--exm)">5</span> Scheduled Deliveries</h4>
+      <p>Any AMXL package with a DNR concession but associated with a scheduled delivery where the driver completed the install is automatically exempted.</p>
+    </div>
+  </div>
+
+  <div class="bpbox" style="background:var(--exm-bg); border:1px solid var(--exm-bd);">
+    <h3 style="color:var(--exm-tx)">
+      <svg viewBox="0 0 24 24" style="stroke:var(--exm-tx)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Scanned, Not Delivered, Not Returned: Best Practices
+    </h3>
+    <ul>
+      <li style="--bp:var(--exm)">If DA does not have the package, mark it missing at the stop. If marking more than three packages as missing, contact Driver Support.</li>
+      <li>If DA cannot deliver the package, bring it back to the station (applies for all RTS codes).</li>
+      <li>At RTS, activate "Self-Service Return," scan all packages, and leave them in the appropriate RTS bin. These receive an automatic DSB exemption.</li>
+      <li>Verify each DA's itinerary when returning to station. If itineraries still show packages in transit, partner with OTR to submit a Shipment Scrub SIM.</li>
+      <li>Driver Support contact is required for the Shipment Scrub SIM to be approved.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="section" id="pod">
+  <div class="section-label" style="color:var(--pod)">Quality Metric</div>
+  <div class="section-title">Photo on Delivery Acceptance Rate</div>
+
+  <div class="def-card" style="border-left-color:var(--pod)">
+    <p><strong>POD Acceptance Rate</strong> measures the percentage of usable, high-quality photos taken out of all PODs submitted. Only clear, accurate photos that help customers find their packages count as accepted.</p>
+  </div>
+
+  <div class="card" style="margin-bottom:13px;">
+    <p class="overview-text">The POD photo is often the only proof customers see that their package was delivered safely. It must clearly show the package and surroundings without revealing personal information. Unclear or incomplete photos cannot be shared with customers and are rejected. A strong POD record builds customer trust and reduces "missing package" claims.</p>
+  </div>
+
+  <div class="two-col">
+    <div class="metric-col">
+      <div class="metric-col-head" style="background:var(--pod-bg); color:var(--pod-tx); border-bottom-color:var(--pod-bd)">
+        <svg viewBox="0 0 24 24" style="stroke:var(--pod-tx)"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+        Common Rejection Reasons
+      </div>
+      <ul>
+        <li><span>Blurry or out-of-focus image</span></li>
+        <li><span>Human body parts or faces visible</span></li>
+        <li><span>Address labels or license plates in frame</span></li>
+        <li><span>Package not clearly visible or blocked</span></li>
+        <li><span>Photo taken from vehicle or too far away</span></li>
+        <li><span>Photo too dark to show package location</span></li>
+        <li><span>Package in hand or inside car when photo taken</span></li>
+      </ul>
+    </div>
+    <div class="metric-col">
+      <div class="metric-col-head" style="background:var(--pod-bg); color:var(--pod-tx); border-bottom-color:var(--pod-bd)">
+        <svg viewBox="0 0 24 24" style="stroke:var(--pod-tx)"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Driver Success Tips
+      </div>
+      <ul>
+        <li><span>Take photo in good lighting. Step back and steady your camera</span></li>
+        <li><span>Center the package in frame with some surrounding context</span></li>
+        <li><span>Review each photo. Tap "Retake" if unclear (no penalty)</span></li>
+        <li><span>Exclude faces, reflections, and personal details</span></li>
+        <li><span>Show exact placement so customer can find the package easily</span></li>
+        <li><span>Never place packages inside USPS mailboxes (federal offense)</span></li>
+        <li><span>Photos help customers locate their packages. Make them count</span></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="footer-logo">AVLG <span>Logistics</span></div>
+  <p>AVLG Quality Metrics Reference &middot; 2026 &middot; For internal use</p>
+</footer>
+
+</div>
+</div>
+
+<div class="page" id="page-safety">
+<div class="wrapper">
+
+<div class="jump-nav" style="margin-top: 20px;">
+  <a href="#seatbelt" class="jump-btn btn-seatbelt">Seatbelt</a>
+  <a href="#speeding" class="jump-btn btn-speed">Speeding</a>
+  <a href="#sign-signal" class="jump-btn btn-sign">Sign/Signal</a>
+  <a href="#distractions" class="jump-btn btn-distract">Distractions</a>
+  <a href="#following" class="jump-btn btn-follow">Following</a>
+</div>
+
+<div class="section" id="safety">
+  <div class="section-banner" style="background:linear-gradient(135deg,var(--seatbelt),#991B1B); color:#fff;">
+    <h2>On-Road Safety Score (OSS)</h2>
+    <p>The OSS measures driver safety behaviors that are predictive of collision risk. It is composed of five behavioral metrics plus FICO, each weighted by their correlation to collisions. Event rates are normalized into 0–100 scores across Fantastic, Great, Fair, and Poor tiers.</p>
+  </div>
+</div>
+
+<div class="section" id="seatbelt">
+  <div class="section-label" style="color:var(--seatbelt-tx)">Safety Metric</div>
+  <div class="section-title">Seatbelt-Off Rate</div>
+
+  <div class="def-card" style="border-left-color:var(--seatbelt)">
+    <p>A <strong>seatbelt-off event</strong> occurs whenever the vehicle is in motion and the DA does not have their seatbelt properly fastened  including wearing the shoulder belt behind the back or the lap belt not over the hips. Events trigger once between vehicle stops.</p>
+  </div>
+
+  <div class="two-col">
+    <div class="metric-col">
+      <div class="metric-col-head" style="background:var(--seatbelt-bg); color:var(--seatbelt-tx); border-bottom-color:var(--seatbelt-bd)">
+        <svg viewBox="0 0 24 24" style="stroke:var(--seatbelt-tx)"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Source Hierarchy
+      </div>
+      <ul>
+        <li><span><strong>1) Netradyne</strong>  ML camera vision detects proper seatbelt wear; GPS confirms vehicle motion</span></li>
+        <li><span><strong>2) Geotab</strong>  Onboard diagnostics detect seatbelt status; speedometer + GPS confirm motion. Available in all branded vehicles</span></li>
+        <li><span>Geotab data is suppressed if the seatbelt sensor is faulty (events exceed address stops or 100 events)</span></li>
+      </ul>
+    </div>
+    <div class="metric-col">
+      <div class="metric-col-head" style="background:var(--seatbelt-bg); color:var(--seatbelt-tx); border-bottom-color:var(--seatbelt-bd)">
+        <svg viewBox="0 0 24 24" style="stroke:var(--seatbelt-tx)"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Tips for DAs
+      </div>
+      <ul>
+        <li><span>Position shoulder belt across the middle of your chest, away from neck</span></li>
+        <li><span>Place lap belt across hips, not stomach</span></li>
+        <li><span><strong>NEVER</strong> put shoulder belt behind back or under arm</span></li>
+        <li><span>Don't place anything between chest and belt</span></li>
+        <li><span>Don't slide between shoulder and lap belt</span></li>
+        <li><span>Never use seatbelt for undesignated tasks (e.g., securing items to seat)</span></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="section" id="speeding">
+  <div class="section-label" style="color:var(--speed-tx)">Safety Metric</div>
+  <div class="section-title">Speeding Event Rate</div>
+
+  <div class="def-card" style="border-left-color:var(--speed)">
+    <p>A <strong>speeding event</strong> is traveling 10 mph or more over the posted speed limit for a 5-second duration, or any instance of exceeding 85 mph. In some environments, 5 seconds is roughly one city block.</p>
+  </div>
+
+  <div class="two-col">
+    <div class="metric-col">
+      <div class="metric-col-head" style="background:var(--speed-bg); color:var(--speed-tx); border-bottom-color:var(--speed-bd)">
+        <svg viewBox="0 0 24 24" style="stroke:var(--speed-tx)"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Source Hierarchy
+      </div>
+      <ul>
+        <li><span><strong>1) Netradyne</strong>  GPS for speed; ML camera reads speed limit signs (falls back to database)</span></li>
+        <li><span><strong>2) Geotab</strong>  Vehicle speedometer for speed; database for limits. Available in all branded vehicles</span></li>
+        <li><span><strong>3) Safeguard</strong>  GPS for speed; database for limits. Amazon's in-app telematics, available in ALL vehicles regardless of type</span></li>
+      </ul>
+    </div>
+    <div class="metric-col">
+      <div class="metric-col-head" style="background:var(--speed-bg); color:var(--speed-tx); border-bottom-color:var(--speed-bd)">
+        <svg viewBox="0 0 24 24" style="stroke:var(--speed-tx)"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Tips for DAs
+      </div>
+      <ul>
+        <li><span>Always observe posted speed limits  no exceptions</span></li>
+        <li><span>Be aware of changing speed zones (school, residential, construction)</span></li>
+        <li><span>Allow extra time rather than rushing to complete route</span></li>
+        <li><span>Remember: exceeding 85 mph triggers an event regardless of the speed limit</span></li>
+        <li><span>DAs exceeding speed limits can also receive Tier Infractions which may lead to offboarding</span></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="section" id="sign-signal">
+  <div class="section-label" style="color:var(--sign-tx)">Safety Metric</div>
+  <div class="section-title">Sign / Signal Violations Rate</div>
+
+  <div class="def-card" style="border-left-color:var(--sign)">
+    <p>A <strong>sign/signal violation</strong> occurs when a DA runs a stop sign without stopping (traveling at least 3 mph), executes an illegal U-turn, or runs a red light. Red-light violations are weighted <strong>10×</strong> and severe stop-sign violations (no stop, &gt;6 mph) are weighted <strong>5×</strong> due to their strong correlation with collision risk.</p>
+  </div>
+
+  <div class="two-col">
+    <div class="metric-col">
+      <div class="metric-col-head" style="background:var(--sign-bg); color:var(--sign-tx); border-bottom-color:var(--sign-bd)">
+        <svg viewBox="0 0 24 24" style="stroke:var(--sign-tx)"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Key Details
+      </div>
+      <ul>
+        <li><span><strong>Source:</strong> Netradyne only  ML camera vision detects violations; GPS confirms speed</span></li>
+        <li><span><strong>Rolling stop</strong> (3–6 mph) = moderate violation  still impacts OSS</span></li>
+        <li><span><strong>No stop</strong> (&gt;6 mph) = severe violation  impacts OSS at <strong>5× weight</strong></span></li>
+        <li><span><strong>Red-Major</strong> (light was red before entering intersection)  impacts OSS at <strong>10× weight</strong></span></li>
+        <li><span><strong>Red-Minor</strong> (entered on yellow, turned red)  does NOT impact OSS</span></li>
+      </ul>
+    </div>
+    <div class="metric-col">
+      <div class="metric-col-head" style="background:var(--sign-bg); color:var(--sign-tx); border-bottom-color:var(--sign-bd)">
+        <svg viewBox="0 0 24 24" style="stroke:var(--sign-tx)"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Tips for DAs
+      </div>
+      <ul>
+        <li><span>Come to a complete stop at every stop sign  no rolling stops</span></li>
+        <li><span>Stop before the stop line or crosswalk, not in the intersection</span></li>
+        <li><span>Never make a U-turn unless clearly permitted by signage</span></li>
+        <li><span>On yellow lights, stop if safe to do so  do not accelerate through</span></li>
+        <li><span>Icy or adverse conditions require even more stopping distance. These events are not excused by weather</span></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="section" id="distractions">
+  <div class="section-label" style="color:var(--distract-tx)">Safety Metric</div>
+  <div class="section-title">Distractions Rate</div>
+
+  <div class="def-card" style="border-left-color:var(--distract)">
+    <p>A <strong>distraction event</strong> is triggered when a DA looks down and away from the road for more than a few seconds (at 15+ mph), looks at their phone for more than a few seconds (at 5+ mph), or talks on their phone (at 5+ mph).</p>
+  </div>
+
+  <div class="two-col">
+    <div class="metric-col">
+      <div class="metric-col-head" style="background:var(--distract-bg); color:var(--distract-tx); border-bottom-color:var(--distract-bd)">
+        <svg viewBox="0 0 24 24" style="stroke:var(--distract-tx)"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Key Details
+      </div>
+      <ul>
+        <li><span><strong>Source:</strong> Netradyne only  ML camera vision detects distraction; GPS confirms speed</span></li>
+        <li><span>Mentor-detected distractions do NOT impact this metric</span></li>
+        <li><span>If the internal-facing camera is obstructed, Netradyne can't detect distractions  the DA won't receive a score for that day</span></li>
+        <li><span>Hands-free devices do NOT trigger events as long as eyes stay on the road</span></li>
+      </ul>
+    </div>
+    <div class="metric-col">
+      <div class="metric-col-head" style="background:var(--distract-bg); color:var(--distract-tx); border-bottom-color:var(--distract-bd)">
+        <svg viewBox="0 0 24 24" style="stroke:var(--distract-tx)"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Tips for DAs
+      </div>
+      <ul>
+        <li><span>Use phone mounts  set up your route BEFORE driving</span></li>
+        <li><span>Many events happen right after getting back in the vehicle and starting to drive. Check surroundings first</span></li>
+        <li><span>Use hands-free devices for calls when needed</span></li>
+        <li><span>Never hold or look at your phone while the vehicle is moving</span></li>
+        <li><span>Ensure the internal-facing camera lens is clean and unobstructed</span></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="section" id="following">
+  <div class="section-label" style="color:var(--follow-tx)">Safety Metric</div>
+  <div class="section-title">Following Distance Rate</div>
+
+  <div class="def-card" style="border-left-color:var(--follow)">
+    <p>A <strong>following distance event</strong> triggers when a DA has 0.6 seconds or less of space with the vehicle in front for a duration of <strong>10 seconds</strong>. The 10-second window is an opportunity to correct  all following distance events are considered controllable.</p>
+  </div>
+
+  <div class="two-col">
+    <div class="metric-col">
+      <div class="metric-col-head" style="background:var(--follow-bg); color:var(--follow-tx); border-bottom-color:var(--follow-bd)">
+        <svg viewBox="0 0 24 24" style="stroke:var(--follow-tx)"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Key Details
+      </div>
+      <ul>
+        <li><span><strong>Source:</strong> Netradyne only  ML camera measures distance; GPS calculates speed and closing time</span></li>
+        <li><span>4 subtypes exist (lane travel, various lane changes)  all triggered by the same 0.6-second / 10-second rule</span></li>
+        <li><span>Both moderate and severe events impact the OSS</span></li>
+        <li><span>Events are NOT excused even if another car cut in front  the DA has 10 seconds to create space</span></li>
+      </ul>
+    </div>
+    <div class="metric-col">
+      <div class="metric-col-head" style="background:var(--follow-bg); color:var(--follow-tx); border-bottom-color:var(--follow-bd)">
+        <svg viewBox="0 0 24 24" style="stroke:var(--follow-tx)"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Tips for DAs
+      </div>
+      <ul>
+        <li><span>Maintain at least a 3-second following distance at all times</span></li>
+        <li><span>If a car cuts in front, immediately ease off the gas to create space</span></li>
+        <li><span>You have 10 seconds to correct before an event triggers  use them</span></li>
+        <li><span>Increase distance in heavy traffic, rain, or poor visibility</span></li>
+        <li><span>Avoid tailgating even when running behind on route</span></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="footer-logo">AVLG <span>Logistics</span></div>
+  <p>AVLG Safety Metrics Reference &middot; 2026 &middot; For internal use</p>
+</footer>
+
+</div>
+</div>
+
+<script>
+function showPage(page) {
+  document.getElementById('page-quality').classList.toggle('active', page === 'quality');
+  document.getElementById('page-safety').classList.toggle('active', page === 'safety');
+  document.getElementById('btn-quality').classList.toggle('active', page === 'quality');
+  document.getElementById('btn-safety').classList.toggle('active', page === 'safety');
+
+  // Re-run reveal after switching pages so hidden sections animate correctly.
+  if (window.DSP_UI && typeof DSP_UI.scrollReveal === 'function') {
+    DSP_UI.scrollReveal('.section');
+  }
+
+  window.scrollTo(0, 0);
+}
+
+(function initMetricsPage() {
+  if (window.DSP_UI && typeof DSP_UI.injectTheme === 'function') {
+    DSP_UI.injectTheme();
+    DSP_UI.syncThemeColor();
+    DSP_UI.scrollReveal('.section');
+  } else if ('IntersectionObserver' in window) {
+    var obs = new IntersectionObserver(
+      function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) entry.target.classList.add('visible');
+        });
+      },
+      { threshold: 0.06 }
+    );
+    document.querySelectorAll('.section').forEach(function(section) {
+      obs.observe(section);
+    });
+  } else {
+    document.querySelectorAll('.section').forEach(function(section) {
+      section.classList.add('visible');
+    });
+  }
+
+  // Bullet dot colors via CSS
+  document.querySelectorAll('.metric-col ul li').forEach(function(li) {
+    var head = li.closest('.metric-col').querySelector('.metric-col-head');
+    if (head) li.style.setProperty('--dot', getComputedStyle(head).color);
+  });
+})();
+</script>
+<style>
+  .metric-col ul li::before { background: var(--dot, var(--muted)); }
+  .klist li::before { background: var(--c, var(--gold)); }
+  .bpbox ul li::before { border-color: var(--bp, var(--exm)); }
+</style>
+</body>
+</html>
